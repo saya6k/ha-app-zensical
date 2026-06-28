@@ -36,17 +36,14 @@ add-on was never shipped with `mkdocs.yml` support, so the codepath was
 removed in the same migration — `resolve-config.sh` only knows about
 `zensical.toml`.
 
-## Git / repo tracking
+## Repo structure
 
-Part of the `ha-apps` monorepo — one git repo at the root, no per-app
-`.git` checkouts. Tracking is **stage-gated** by the root `.gitignore`:
-only `stage: stable` add-ons are committed; experimental ones are
-gitignored and stay local-only. Promote one by setting `stage: stable`
-in `config.yaml`, deleting its line from the root `.gitignore`, then
-`git add` it.
+Standalone repo — source, CI, and releases live here.
+`ha-apps` references the published GHCR image via `image: ghcr.io/saya6k/app-zensical`.
 
-**This add-on:** tracked (`stage: stable` — promoted from experimental
-2026-06-03).
+**Stage:** stable (no `stage:` key in `config.yaml`).
+
+Release flow: push to `main` → release-drafter drafts the next patch version → publish the draft → `build.yml` pushes multi-arch GHCR images → `repository_dispatch` to ha-apps auto-updates `config.yaml`.
 
 ## Layout
 
@@ -275,9 +272,9 @@ exposed to the host network.
   further base bump.
 - `HEALTHCHECK` probes the ingress port; nginx returning 200 on
   `/index.html` proves both init and serve worked.
-- No `image:` line in `config.yaml` — HA builds this add-on locally from its
-  Dockerfile. CI build-tests the Dockerfile (`.github/workflows/ci.yml`,
-  `push: false`); nothing is published to a registry.
+- `build.yml` publishes `ghcr.io/saya6k/app-zensical:{version}` to GHCR on each
+  release; `ha-apps/zensical/config.yaml` references it via `image:`. CI on PRs
+  still runs `build-test` (build only, `push: false`) to catch Dockerfile regressions.
 
 ## Zensical-specific gotchas
 
@@ -309,6 +306,6 @@ exposed to the host network.
   title/description/source.
 - `HEALTHCHECK` probes the ingress port; nginx returning 200 on
   `/index.html` proves both init and serve worked.
-- No `image:` line in `config.yaml` — HA builds this add-on locally from its
-  Dockerfile. CI build-tests the Dockerfile (`.github/workflows/ci.yml`,
-  `push: false`); nothing is published to a registry.
+- `build.yml` publishes `ghcr.io/saya6k/app-zensical:{version}` to GHCR on each
+  release; `ha-apps/zensical/config.yaml` references it via `image:`. CI on PRs
+  still runs `build-test` (build only, `push: false`) to catch Dockerfile regressions.
