@@ -1,0 +1,46 @@
+---
+name: Upstream check
+
+# yamllint disable-line rule:truthy
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    name: Check PyPI zensical
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check PyPI version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          LATEST=$(curl -sf https://pypi.org/pypi/zensical/json | jq -r .info.version)
+          CURRENT=$(grep '^zensical==' zensical/requirements.txt | cut -d= -f3)
+          echo "Latest : $LATEST"
+          echo "Current: $CURRENT"
+          [ "$LATEST" = "$CURRENT" ] && echo "Up to date." && exit 0
+
+          gh pr list --head "upstream/zensical-${LATEST}" --json number --jq 'length' \
+            | grep -qv '^0$' && echo "PR already open." && exit 0
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git switch -c "upstream/zensical-${LATEST}"
+          sed -i "s|^zensical==.*|zensical==${LATEST}|" zensical/requirements.txt
+          git add zensical/requirements.txt
+          git commit -m "chore: bump zensical ${CURRENT} → ${LATEST}"
+          git push origin "upstream/zensical-${LATEST}"
+          gh pr create \
+            --base main --head "upstream/zensical-${LATEST}" \
+            --title "chore: bump zensical ${CURRENT} → ${LATEST}" \
+            --body "$(printf '## PyPI update\n\n[zensical %s](https://pypi.org/project/zensical/%s/) released.\n\n> **Note:** 0.0.x releases may break compat — verify build + ingress path before merging.' "${LATEST}" "${LATEST}")" \
+            --assignee saya6k
