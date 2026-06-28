@@ -1,0 +1,27 @@
+version: dev
+slug: zensical
+name: Zensical
+description: >-
+  Render /config/docs/ as a Zensical site (Material for MkDocs successor),
+  served via the ingress panel.
+url: https://github.com/saya6k/ha-app-zensical
+arch:
+  - amd64
+  - aarch64
+init: false
+ingress: true
+panel_icon: mdi:book-open-page-variant
+panel_title: Docs
+panel_admin: false
+options:
+  log_level: info
+schema:
+  log_level: list(trace|debug|info|notice|warning|error|fatal)
+map:
+  - type: homeassistant_config
+    read_only: false
+    path: /config
+  - type: addon_config
+    read_only: false
+    path: /addon_config
+homeassistant: 2024.4.0
