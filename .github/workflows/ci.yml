@@ -107,9 +107,7 @@ jobs:
 
   build-test:
     name: build test (${{ matrix.arch }})
-    if: >-
-      !startsWith(github.head_ref, 'release-please--') &&
-      github.ref != 'refs/heads/main'
+    if: github.ref != 'refs/heads/main'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     strategy:
