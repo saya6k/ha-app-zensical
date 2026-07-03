@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Install the lint tooling used by the pre-PR sanity checks (yamllint,
+# shellcheck) — `docker build .` already works via the docker-in-docker feature.
+set -euxo pipefail
+
+cd "$(dirname "$0")/.."
+
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends shellcheck yamllint
