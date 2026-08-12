@@ -7,20 +7,44 @@ on:
     - cron: '0 6 * * 1'
   workflow_dispatch:
 
+# The branch push and the PR are made with UPSTREAM_PR_TOKEN, not the
+# default GITHUB_TOKEN, so GITHUB_TOKEN needs nothing beyond read here.
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   check:
     name: Check PyPI zensical
     runs-on: ubuntu-latest
     steps:
+      # GitHub deliberately does not trigger workflows from events raised
+      # by GITHUB_TOKEN, so a bump PR opened with it gets zero check runs
+      # — `gh pr checks` reports "no checks reported" and the PR looks
+      # clean while being unbuildable (that is how the 0.0.53 bump landed
+      # with an unresolvable pymdown-extensions pin). A user-owned token
+      # lifts that restriction. Fail loudly rather than falling back to
+      # GITHUB_TOKEN, which would silently restore the blind spot.
+      - name: Require UPSTREAM_PR_TOKEN
+        env:
+          HAS_TOKEN: ${{ secrets.UPSTREAM_PR_TOKEN != '' }}
+        run: |
+          set -euo pipefail
+          if [ "$HAS_TOKEN" != "true" ]; then
+            echo "::error::UPSTREAM_PR_TOKEN is not set. Bump PRs opened" \
+                 "with GITHUB_TOKEN never run CI. Add a fine-grained PAT" \
+                 "(Contents: read/write, Pull requests: read/write) as the" \
+                 "UPSTREAM_PR_TOKEN repository secret."
+            exit 1
+          fi
+
+      # Persists UPSTREAM_PR_TOKEN as the credential for `git push` below.
       - uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.UPSTREAM_PR_TOKEN }}
 
       - name: Check PyPI version
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.UPSTREAM_PR_TOKEN }}
         run: |
           set -euo pipefail
           LATEST=$(curl -sf https://pypi.org/pypi/zensical/json | jq -r .info.version)
