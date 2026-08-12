@@ -282,6 +282,40 @@ exposed to the host network.
   release; `ha-apps/zensical/config.yaml` references it via `image:`. CI on PRs
   still runs `build-test` (build only, `push: false`) to catch Dockerfile regressions.
 
+## Reviewing an upstream bump PR
+
+`upstream-check.yml` opens the `upstream/zensical-*` PRs with
+`secrets.GITHUB_TOKEN`, and GitHub does not trigger workflows from
+events raised by that token. So these PRs land with **zero check runs**
+— `gh pr checks <n>` reports "no checks reported". A bump PR showing no
+failures is not evidence that it builds.
+
+Decided 2026-08-12: keep `GITHUB_TOKEN` and trigger CI by hand rather
+than maintain a PAT with an expiry (the alternative was passing a
+fine-grained `UPSTREAM_PR_TOKEN` to `actions/checkout` and `gh`).
+
+To get CI onto a bump PR, cheapest first:
+
+1. `gh pr close <n> && gh pr reopen <n>` — fires `pull_request:
+   reopened` from your own account, so checks attach to the PR and
+   `gh pr checks` works normally.
+2. Push a commit to the branch — fires `synchronize`. Same result;
+   this is what actually ran CI on #10.
+3. `gh workflow run ci.yml --ref upstream/zensical-<version>` — runs
+   (including `build-test`, whose `if` only excludes `main`), but the
+   results attach to the branch, not the PR, so `gh pr checks` stays
+   empty and you read the Actions tab instead.
+
+Then, because the bump commit only ever rewrites the `zensical` line:
+
+- Diff the release's PyPI `requires_dist` against every exact pin in
+  `requirements.txt`. `pip install --dry-run -r requirements.txt`
+  reproduces a conflict locally without a container.
+- Read the upstream release notes for config-format changes. 0.0.53's
+  "update `zensical.toml` to TOML 1.1 syntax" is the kind that CI
+  cannot catch — the image built fine, but `effective-config.py` would
+  have failed on any config a current `zensical new` produced.
+
 ## Zensical-specific gotchas
 
 - **Emoji backend.** `material.extensions.emoji.twemoji` no longer
