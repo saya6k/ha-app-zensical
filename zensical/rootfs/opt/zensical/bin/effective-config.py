@@ -24,8 +24,8 @@ Usage:  effective-config.py SRC DST
 from __future__ import annotations
 
 import sys
-import tomllib
 
+import tomli
 import tomli_w
 
 DOCS_DIR = "docs"
@@ -34,7 +34,7 @@ SITE_DIR = "site"
 
 def main(src: str, dst: str) -> None:
     with open(src, "rb") as f:
-        data = tomllib.load(f)
+        data = tomli.load(f)
     # Zensical accepts both flat configs and [project]-wrapped configs;
     # normalise to wrapped so our overrides land in the right place.
     if "project" not in data:

@@ -164,10 +164,12 @@ relative paths would point at the wrong places — so we overwrite
 them. Everything else from the source (site_name, theme, palette,
 markdown_extensions) passes through unmodified.
 
-`effective-config.py` uses `tomllib` (stdlib, Python ≥3.11) to read
-and `tomli_w` (pure-Python PyPI dep, ~30 KB) to write. The "wrap or
-strip `[project]`" normalisation matches Zensical's own
-`parse_zensical_config` behaviour.
+`effective-config.py` uses `tomli` (PyPI, TOML 1.1) to read and
+`tomli_w` (pure-Python PyPI dep, ~30 KB) to write. Not stdlib
+`tomllib`: since 0.0.53 Zensical generates `zensical.toml` in TOML 1.1
+syntax (multi-line inline tables with trailing commas), which
+`tomllib`'s TOML 1.0.2 parser rejects. The "wrap or strip `[project]`"
+normalisation matches Zensical's own `parse_zensical_config` behaviour.
 
 ## Index resolution
 
@@ -253,11 +255,15 @@ exposed to the host network.
 
 ## Pins & build
 
-- `requirements.txt` pins `zensical==0.0.43` (exact) and
-  `pymdown-extensions==10.21.3`. Zensical is alpha (0.0.x) — treat
+- `requirements.txt` pins `zensical==0.0.53` (exact) and
+  `pymdown-extensions==11.0.1`. Zensical is alpha (0.0.x) — treat
   every patch bump as potentially breaking and verify locally before
-  merging. We are explicitly *not* tracking mkdocs or mkdocs-material;
-  that subtree was removed on 2026-05-26.
+  merging. Bump PRs only touch the `zensical` line, so check the new
+  release's dependency metadata: 0.0.53 moved to
+  `pymdown-extensions>=11.0`, which the old `==10.21.3` pin turned into
+  a `ResolutionImpossible` build failure. We are explicitly *not*
+  tracking mkdocs or mkdocs-material; that subtree was removed on
+  2026-05-26.
 - **musllinux wheels** for `amd64` (`musllinux_1_2_x86_64`) and
   `aarch64` (`musllinux_1_2_aarch64`) are published on PyPI, so install
   on the Alpine HA base is fast and does not need a Rust toolchain. If

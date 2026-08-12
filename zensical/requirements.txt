@@ -17,7 +17,12 @@
 #   * musllinux_1_2 wheels exist for amd64 + aarch64, so install is
 #     fast on Alpine without a Rust toolchain.
 zensical==0.0.53
-pymdown-extensions==10.21.3
+pymdown-extensions==11.0.1
+# tomli (not the stdlib tomllib) because Zensical 0.0.53 generates
+# zensical.toml in TOML 1.1 syntax — multi-line inline tables with
+# trailing commas — which tomllib's TOML 1.0.2 parser rejects.
+# effective-config.py has to read whatever the user's zensical wrote.
+tomli==2.4.1
 # tomli-w lets us rewrite the user's zensical.toml at runtime so docs_dir
 # and site_dir always point at the container paths the add-on relies on,
 # regardless of what the user wrote for their GitHub Pages workflow. Pure
