@@ -8,6 +8,7 @@ FROM ${BUILD_FROM}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 LABEL \
+    io.hass.type="app" \
     org.opencontainers.image.title="Home Assistant Add-on: Zensical" \
     org.opencontainers.image.description="Render /config/docs/ as a Zensical site, served via the ingress panel" \
     org.opencontainers.image.source="https://github.com/saya6k/ha-mkdocs" \
