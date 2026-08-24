@@ -16,7 +16,7 @@
 #     render differently in alpha until Zensical hits a stable release.
 #   * musllinux_1_2 wheels exist for amd64 + aarch64, so install is
 #     fast on Alpine without a Rust toolchain.
-zensical==0.0.53
+zensical==0.0.57
 pymdown-extensions==11.0.1
 # tomli (not the stdlib tomllib) because Zensical 0.0.53 generates
 # zensical.toml in TOML 1.1 syntax — multi-line inline tables with
